@@ -62,7 +62,7 @@ void shader::CheckCompilationErrors(unsigned int shader, const std::string& type
 	char log[1024];
 	if (type == "PROGRAM")
 	{
-		glGetProgramiv(ID, GL_COMPILE_STATUS, &success);
+		glGetProgramiv(ID, GL_LINK_STATUS, &success);
 		if (!success)
 		{
 			std::cerr << "Failed to link program!\n";
@@ -98,6 +98,10 @@ void shader::CheckCompilationErrors(unsigned int shader, const std::string& type
 void shader::setFloat(const std::string& name, float value)
 {
 	glUniform1f(GetUniformLocation(name), value);
+}
+void shader::setVec2(const std::string& name, const glm::vec2& v)
+{
+	glUniform2fv(GetUniformLocation(name),1, &v[0]);
 }
 void shader::setMat4(const std::string& name, const glm::mat4& mat)
 {

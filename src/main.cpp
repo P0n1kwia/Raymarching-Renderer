@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <iostream>
 
 
@@ -57,9 +58,11 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	
 
 	shader screenShader("shaders/ScreenVertex.glsl", "shaders/ScreenFragment.glsl");
-
+	glm::vec2 resolution = glm::vec2(WIDTH, HEIGHT);
+	
 	glBindVertexArray(0);
 
 	while (!glfwWindowShouldClose(window))
@@ -69,6 +72,7 @@ int main()
 
 		glBindVertexArray(screenVAO);
 		screenShader.use();
+		screenShader.setVec2("aResolution", resolution);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwSwapBuffers(window);
