@@ -1,3 +1,6 @@
+
+// That is a template for shader fragment.
+
 #version 460 core
 
 uniform vec2 u_mouse;
@@ -9,6 +12,6 @@ void main()
 {
 	vec2 uv = vec2((gl_FragCoord.xy - 0.5f*u_resolution)/u_resolution.y);
 	vec2 m = vec2((u_mouse -0.5f*u_resolution)/u_resolution.y);
-	u_time *1.f;
-	FragColor = vec4(m,0.0f,1.0f);
+	
+	FragColor = vec4(uv,sin(u_time),1.0f);
 }

@@ -2,11 +2,15 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <iostream>
-
+#include <filesystem>
 
 #include <shader.h>
 
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height);
+
+//changing shaders
+std::vector<std::string> ScanFolderForShaders(const std::string& folderPath);
+void ProcessInput(GLFWwindow* window, int& iterator, bool& reload);
 
 constexpr unsigned int WIDTH = 1024;
 constexpr unsigned int HEIGHT = 800;
@@ -58,25 +62,53 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	
+	auto shaders = ScanFolderForShaders("shaders");
 
-	shader screenShader("shaders/ScreenVertex.glsl", "shaders/ScreenFragment.glsl");
-	glm::vec2 resolution = glm::vec2(WIDTH, HEIGHT);
+	shader screenShader;
+	std::string vertexPath = "shaders/ScreenVertex.glsl";
 	
+	int iterator = 0;
 	glBindVertexArray(0);
+	
 
+	bool reload = false;
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		float time = glfwGetTime();
+		//input and shader loading
+		ProcessInput(window, iterator,reload);
+		if (iterator < 0)
+		{
+			iterator = 0;
+		}
+		else if (iterator >= shaders.size())
+		{
+			iterator = shaders.size() - 1;
+		}
+		if(reload)
+		screenShader.Compile(vertexPath, shaders[iterator]);
+		screenShader.Compile(vertexPath, shaders[iterator]);
+
+
 		glBindVertexArray(screenVAO);
+
 		screenShader.use();
-		screenShader.setVec2("aResolution", resolution);
+
+
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+		glm::vec2 resolution = glm::vec2(WIDTH, HEIGHT);
+		screenShader.setVec2("u_resolution", resolution);
+		screenShader.setVec2("u_mouse", { xpos,ypos });
+		screenShader.setFloat("u_time", time);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		reload = false;
 	}
 
 	glDeleteBuffers(1, &screenVBO);
@@ -87,4 +119,37 @@ int main()
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+}
+std::vector<std::string> ScanFolderForShaders(const std::string& folderPath)
+{
+	std::vector<std::string> shaders;
+	std::filesystem::path path{ folderPath };
+	std::string vertex = path.string() + "\\ScreenVertex.glsl";
+	for (auto const& shader : std::filesystem::directory_iterator{ path })
+	{
+		if (shader.path().string() == vertex) continue;
+		shaders.push_back(shader.path().string());
+	}
+	return shaders;
+
+}
+void ProcessInput(GLFWwindow* window, int& iterator, bool& reload)
+{
+	if (glfwGetKey(window, GLFW_KEY_R))
+	{
+		reload = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE))
+	{
+		glfwSetWindowShouldClose(window, true);
+	}
+	if (glfwGetKey(window, GLFW_KEY_Q))
+	{
+		--iterator;
+	}
+	if (glfwGetKey(window, GLFW_KEY_E))
+	{
+		++iterator;
+	}
+
 }

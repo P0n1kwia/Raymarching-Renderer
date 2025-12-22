@@ -4,9 +4,11 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-shader::shader(const std::string& vertexPath, const std::string& fragmentPath)
+void shader::Compile(const std::string& vertexPath, const std::string& fragmentPath)
 {
-	std::string vertexCode, fragmentCode;
+	glDeleteProgram(ID);
+	std::string vertexCode;
+	std::string fragmentCode;
 	std::ifstream vertexFile, fragmentFile;
 	vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -107,7 +109,11 @@ void shader::setMat4(const std::string& name, const glm::mat4& mat)
 {
 	glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
 }
-void shader::setVec3(const std::string name, const glm::vec3& vec)
+void shader::setInt(const std::string& name, int value)
+{
+	glUniform1i(GetUniformLocation(name), value);
+}
+void shader::setVec3(const std::string& name, const glm::vec3& vec)
 {
 	glUniform3fv(GetUniformLocation(name), 1, &vec[0]);
 }
@@ -130,3 +136,5 @@ unsigned int shader::GetUniformLocation(const std::string& name)
 
 	return location;
 }
+
+
