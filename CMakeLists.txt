@@ -45,6 +45,7 @@ target_include_directories(RaymarchingRenderer PRIVATE
 )
 
 target_link_libraries(RaymarchingRenderer PRIVATE glfw glad glm)
+target_compile_definitions(RaymarchingRenderer PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 set_target_properties(RaymarchingRenderer PROPERTIES 
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )

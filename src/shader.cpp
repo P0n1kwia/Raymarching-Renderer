@@ -6,7 +6,7 @@
 #include <sstream>
 void shader::Compile(const std::string& vertexPath, const std::string& fragmentPath)
 {
-	glDeleteProgram(ID);
+	bool error = false;
 	std::string vertexCode;
 	std::string fragmentCode;
 	std::ifstream vertexFile, fragmentFile;
@@ -43,33 +43,48 @@ void shader::Compile(const std::string& vertexPath, const std::string& fragmentP
 	glCompileShader(fragment);
 	CheckCompilationErrors(fragment, "FRAGMENT");
 
-	ID = glCreateProgram();
-	glAttachShader(ID, vertex);
-	glAttachShader(ID, fragment);
-	glLinkProgram(ID);
+	unsigned int temp_ID = glCreateProgram();
+	glAttachShader(temp_ID, vertex);
+	glAttachShader(temp_ID, fragment);
+	glLinkProgram(temp_ID);
 
-	CheckCompilationErrors(ID, "PROGRAM");
+	if (!CheckCompilationErrors(temp_ID, "PROGRAM"))
+	{
+		glDeleteShader(vertex);
+		glDeleteShader(fragment);
+		
+		return;
+	}
+	else
+	{
+		glDeleteProgram(ID);
+		ID = temp_ID;
+		glDeleteShader(vertex);
+		glDeleteShader(fragment);
 
-	glDeleteShader(vertex);
-	glDeleteShader(fragment);
+	}
+
+
 
 }
 void shader::use()
 {
 	glUseProgram(ID);
 }
-void shader::CheckCompilationErrors(unsigned int shader, const std::string& type)
+bool shader::CheckCompilationErrors(unsigned int shader, const std::string& type)
 {
+	bool flag = true;
 	int success;
 	char log[1024];
 	if (type == "PROGRAM")
 	{
-		glGetProgramiv(ID, GL_LINK_STATUS, &success);
+		glGetProgramiv(shader, GL_LINK_STATUS, &success);
 		if (!success)
 		{
 			std::cerr << "Failed to link program!\n";
-			glGetProgramInfoLog(ID, 1024, nullptr, log);
+			glGetProgramInfoLog(shader, 1024, nullptr, log);
 			std::cerr << log << std::endl;
+			flag = true;
 		}
 	}
 	else
@@ -82,6 +97,7 @@ void shader::CheckCompilationErrors(unsigned int shader, const std::string& type
 				std::cerr << "Failed to complie Vertex Shader!\n";
 				glGetProgramInfoLog(shader, 1024, nullptr, log);
 				std::cerr << log << std::endl;
+				flag = true;
 			}
 		}
 		
@@ -93,9 +109,11 @@ void shader::CheckCompilationErrors(unsigned int shader, const std::string& type
 				std::cerr << "Failed to complie Fragment Shader!\n";
 				glGetProgramInfoLog(shader, 1024, nullptr, log);
 				std::cerr << log << std::endl;
+				flag = true;
 			}
 		}	
 	}
+	return flag;
 }
 void shader::setFloat(const std::string& name, float value)
 {

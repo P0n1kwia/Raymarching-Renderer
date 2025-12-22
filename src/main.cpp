@@ -62,16 +62,23 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	auto shaders = ScanFolderForShaders("shaders");
+	// brute force for hot reload;
+	std::filesystem::path rootPath(ROOT_DIR); 
+	std::filesystem::path shaderPath = rootPath / "shaders"; 
 
+	auto shaders = ScanFolderForShaders(shaderPath.string());
+
+	
+	std::string vertexPath = (shaderPath / "ScreenVertex.glsl").string();
 	shader screenShader;
-	std::string vertexPath = "shaders/ScreenVertex.glsl";
 	
 	int iterator = 0;
+	int lastIterator=0;
 	glBindVertexArray(0);
 	
 
 	bool reload = false;
+	screenShader.Compile(vertexPath, shaders[iterator]);
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -88,10 +95,10 @@ int main()
 		{
 			iterator = shaders.size() - 1;
 		}
-		if(reload)
+		if(reload || iterator!= lastIterator)
 		screenShader.Compile(vertexPath, shaders[iterator]);
-		screenShader.Compile(vertexPath, shaders[iterator]);
-
+		
+		
 
 		glBindVertexArray(screenVAO);
 
@@ -109,6 +116,7 @@ int main()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 		reload = false;
+		lastIterator = iterator;
 	}
 
 	glDeleteBuffers(1, &screenVBO);
@@ -135,21 +143,49 @@ std::vector<std::string> ScanFolderForShaders(const std::string& folderPath)
 }
 void ProcessInput(GLFWwindow* window, int& iterator, bool& reload)
 {
-	if (glfwGetKey(window, GLFW_KEY_R))
+	static bool rPressed = false;
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 	{
-		reload = true;
+		if (!rPressed) 
+		{ 
+			reload = true;
+			rPressed = true;
+			
+		}
+	}
+	else 
+	{
+		rPressed = false; 
 	}
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE))
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-	if (glfwGetKey(window, GLFW_KEY_Q))
+	static bool qPressed = false;
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		--iterator;
+		if (!qPressed)
+		{
+			--iterator;
+			qPressed = true;
+		}
 	}
-	if (glfwGetKey(window, GLFW_KEY_E))
+	else 
 	{
-		++iterator;
+		qPressed = false;
+	}
+	static bool ePressed = false;
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		if (!ePressed) 
+		{
+			++iterator;
+			ePressed = true;
+		}
+	}
+	else 
+	{
+		ePressed = false;
 	}
 
 }
