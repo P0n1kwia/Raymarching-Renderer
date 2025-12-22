@@ -4,9 +4,11 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-shader::shader(const std::string& vertexPath, const std::string& fragmentPath)
+void shader::Compile(const std::string& vertexPath, const std::string& fragmentPath)
 {
-	std::string vertexCode, fragmentCode;
+	bool error = false;
+	std::string vertexCode;
+	std::string fragmentCode;
 	std::ifstream vertexFile, fragmentFile;
 	vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -41,33 +43,48 @@ shader::shader(const std::string& vertexPath, const std::string& fragmentPath)
 	glCompileShader(fragment);
 	CheckCompilationErrors(fragment, "FRAGMENT");
 
-	ID = glCreateProgram();
-	glAttachShader(ID, vertex);
-	glAttachShader(ID, fragment);
-	glLinkProgram(ID);
+	unsigned int temp_ID = glCreateProgram();
+	glAttachShader(temp_ID, vertex);
+	glAttachShader(temp_ID, fragment);
+	glLinkProgram(temp_ID);
 
-	CheckCompilationErrors(ID, "PROGRAM");
+	if (!CheckCompilationErrors(temp_ID, "PROGRAM"))
+	{
+		glDeleteShader(vertex);
+		glDeleteShader(fragment);
+		
+		return;
+	}
+	else
+	{
+		glDeleteProgram(ID);
+		ID = temp_ID;
+		glDeleteShader(vertex);
+		glDeleteShader(fragment);
 
-	glDeleteShader(vertex);
-	glDeleteShader(fragment);
+	}
+
+
 
 }
 void shader::use()
 {
 	glUseProgram(ID);
 }
-void shader::CheckCompilationErrors(unsigned int shader, const std::string& type)
+bool shader::CheckCompilationErrors(unsigned int shader, const std::string& type)
 {
+	bool flag = true;
 	int success;
 	char log[1024];
 	if (type == "PROGRAM")
 	{
-		glGetProgramiv(ID, GL_LINK_STATUS, &success);
+		glGetProgramiv(shader, GL_LINK_STATUS, &success);
 		if (!success)
 		{
 			std::cerr << "Failed to link program!\n";
-			glGetProgramInfoLog(ID, 1024, nullptr, log);
+			glGetProgramInfoLog(shader, 1024, nullptr, log);
 			std::cerr << log << std::endl;
+			flag = true;
 		}
 	}
 	else
@@ -80,6 +97,7 @@ void shader::CheckCompilationErrors(unsigned int shader, const std::string& type
 				std::cerr << "Failed to complie Vertex Shader!\n";
 				glGetProgramInfoLog(shader, 1024, nullptr, log);
 				std::cerr << log << std::endl;
+				flag = true;
 			}
 		}
 		
@@ -91,9 +109,11 @@ void shader::CheckCompilationErrors(unsigned int shader, const std::string& type
 				std::cerr << "Failed to complie Fragment Shader!\n";
 				glGetProgramInfoLog(shader, 1024, nullptr, log);
 				std::cerr << log << std::endl;
+				flag = true;
 			}
 		}	
 	}
+	return flag;
 }
 void shader::setFloat(const std::string& name, float value)
 {
@@ -107,7 +127,11 @@ void shader::setMat4(const std::string& name, const glm::mat4& mat)
 {
 	glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
 }
-void shader::setVec3(const std::string name, const glm::vec3& vec)
+void shader::setInt(const std::string& name, int value)
+{
+	glUniform1i(GetUniformLocation(name), value);
+}
+void shader::setVec3(const std::string& name, const glm::vec3& vec)
 {
 	glUniform3fv(GetUniformLocation(name), 1, &vec[0]);
 }
@@ -130,3 +154,5 @@ unsigned int shader::GetUniformLocation(const std::string& name)
 
 	return location;
 }
+
+

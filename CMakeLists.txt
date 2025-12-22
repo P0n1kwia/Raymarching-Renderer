@@ -36,15 +36,19 @@ target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/external/glad/includ
 
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE SHADERS "shaders/*.glsl")
 
-add_executable (RaymarchingRenderer ${SOURCES})
+add_executable (RaymarchingRenderer ${SOURCES} ${SHADERS})
 
 target_include_directories(RaymarchingRenderer PRIVATE 
     "${CMAKE_SOURCE_DIR}/include"
 )
 
 target_link_libraries(RaymarchingRenderer PRIVATE glfw glad glm)
-
+target_compile_definitions(RaymarchingRenderer PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+set_target_properties(RaymarchingRenderer PROPERTIES 
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
 add_custom_command(TARGET RaymarchingRenderer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_SOURCE_DIR}/shaders"
