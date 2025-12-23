@@ -79,6 +79,7 @@ int main()
 
 	bool reload = false;
 	screenShader.Compile(vertexPath, shaders[iterator]);
+	std::cout << "Loaded: " << shaders[iterator] << "\n";
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -95,8 +96,15 @@ int main()
 		{
 			iterator = shaders.size() - 1;
 		}
-		if(reload || iterator!= lastIterator)
-		screenShader.Compile(vertexPath, shaders[iterator]);
+		if (reload || iterator != lastIterator)
+		{
+			screenShader.Compile(vertexPath, shaders[iterator]);
+			if (!reload)
+				std::cout << "Loaded: " << shaders[iterator] << "\n";
+			else
+				std::cout << "Reloaded: " << shaders[iterator] << "\n";
+		}
+		
 		
 		
 
